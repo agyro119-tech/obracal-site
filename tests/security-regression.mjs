@@ -124,6 +124,7 @@ test('calculadora científica: expressões básicas e precedência', () => {
   assert.equal(evalExpr('2^3^2'), 512);
   assert.equal(evalExpr('sqrt(81)'), 9);
   assert.equal(evalExpr('50%'), 0.5);
+  assert.equal(evalExpr('200+10%'), 200.1);
   assert.equal(evalExpr('1,5+2'), 3.5);
 });
 
@@ -190,6 +191,11 @@ test('tema mobile inicia claro, respeita preferência, evita escurecimento forç
   assert.ok(html.includes('body.light-theme{color-scheme:only light}'));
   assert.ok(html.includes("$('#bottomNav').innerHTML=mobileItems;"));
   assert.doesNotMatch(html, /theme-toggle-mobile/);
+});
+
+test('M4: o rótulo da calculadora não promete funções trigonométricas ausentes', () => {
+  assert.ok(html.includes('ARITMÉTICA / π / RAIZ / %'));
+  assert.doesNotMatch(html, /RAD \/ GRAUS nas funções trigonométricas/);
 });
 
 test('fundo claro mobile usa degradê opaco e uniforme', () => {
