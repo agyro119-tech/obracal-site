@@ -75,15 +75,19 @@ test('JavaScript completo compila sem erro de sintaxe', () => {
   assert.doesNotThrow(() => new vm.Script(scriptMatch[1]));
 });
 
-test('tema mobile inicia claro sem preferência manual e respeita escolha do usuário', () => {
+test('tema mobile inicia claro, respeita preferência, evita escurecimento forçado e usa botão no cabeçalho', () => {
   assert.ok(html.includes("const storedTheme=storage.get('obc-theme',null)"));
   assert.ok(html.includes("const explicitTheme=storage.get('obc-theme-choice',false)===true"));
   assert.ok(html.includes("const isMobileViewport=window.matchMedia?window.matchMedia('(max-width: 760px)').matches:window.innerWidth<=760"));
   assert.ok(html.includes("const initialTheme=explicitTheme?(storedTheme==='light'?'light':'dark'):(isMobileViewport?'light':(storedTheme==='light'?'light':'dark'))"));
   assert.ok(html.includes("storage.set('obc-theme-choice',true)"));
-  assert.ok(html.includes('class="theme-toggle theme-toggle-mobile"'));
-  assert.ok(html.includes('.bottom-nav .theme-toggle-mobile{display:flex!important;position:static!important;'));
-  assert.ok(html.includes('body.light-theme{color-scheme:light}'));
+  assert.ok(html.includes('class="theme-toggle theme-toggle-desktop" id="themeToggleDesktop" aria-label='));
+  assert.ok(html.includes('.theme-toggle-desktop{display:inline-flex!important;position:static'));
+  assert.ok(html.includes("document.documentElement.style.colorScheme=light?'only light':'dark'"));
+  assert.ok(html.includes("document.body.style.colorScheme=light?'only light':'dark'"));
+  assert.ok(html.includes('body.light-theme{color-scheme:only light}'));
+  assert.ok(html.includes("$('#bottomNav').innerHTML=mobileItems;"));
+  assert.doesNotMatch(html, /theme-toggle-mobile/);
 });
 
 test('dicas de obra são curtas, variadas e mantêm o layout compacto', () => {
