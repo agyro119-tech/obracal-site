@@ -68,6 +68,15 @@ body.light-theme .toast{background:#e6f7df;border-color:#24945188;color:#1d6e3d}
 
 .theme-toggle-mobile{display:none}
 @media(max-width:760px){.theme-toggle-desktop{display:none}.theme-toggle-mobile{display:inline-flex;position:fixed;right:12px;bottom:80px;z-index:12;width:44px;height:44px;border-radius:50%;padding:0;box-shadow:var(--shadow)}}
+
+/* O seletor de tema segue o mesmo padrão do topo em todas as telas */
+.theme-toggle-mobile{display:none!important}
+@media(max-width:760px){
+  .top-right>span:last-of-type{display:none}
+  .top-right{margin-left:auto}
+  .theme-toggle-desktop{display:inline-flex;position:static;right:auto;bottom:auto;z-index:auto;width:34px;height:34px;flex:0 0 34px;border-radius:50%;padding:0;box-shadow:none}
+  .theme-toggle-desktop .theme-toggle-label{display:none}
+}
 </style></head>
 <body><a class="skip-link" href="#main-content">Pular para o conteúdo</a><div class="app"><aside class="sidebar"><div class="brand"><div class="brand-mark">⌂</div><div><h1>ObraCalc</h1><small>Engenharia do conhecimento</small></div></div><div class="nav-label">Workspace</div><nav class="nav" id="sideNav"></nav><div class="side-foot"><span class="dot"></span> MODO LOCAL · OFFLINE<br>UNIDADES SI · BRL<br><br>v1.0 · ESTUDO TÉCNICO</div></aside><div class="main"><header class="topbar"><div class="mobile-brand"><span class="brand-mark">⌂</span> ObraCalc</div><div class="crumb" id="crumb">PAINEL / INÍCIO</div><div class="top-right"><span class="pill">SI · m / m² / m³</span><span class="pill hide-mobile">pt-BR · R$</span><span>● LOCAL</span><button type="button" class="theme-toggle theme-toggle-desktop" id="themeToggleDesktop" aria-pressed="false" title="Ativar tema claro"><span class="theme-toggle-icon" aria-hidden="true">☀</span><span class="theme-toggle-label">Tema claro</span></button></div></header><main class="work" id="main-content"><div class="disclaimer">⚠ <span><b>Ferramenta educacional para estimativas.</b> Confira projetos, normas técnicas aplicáveis, fichas dos fabricantes e orientação de profissional habilitado. Não dimensiona estruturas nem substitui projeto ou responsabilidade técnica.</span></div><div id="view"></div></main></div></div><nav class="bottom-nav" id="bottomNav"></nav><button type="button" class="theme-toggle theme-toggle-mobile" id="themeToggleMobile" aria-pressed="false" title="Ativar tema claro"><span class="theme-toggle-icon" aria-hidden="true">☀</span><span class="theme-toggle-label">Tema claro</span></button><div class="toast" id="toast" role="status"></div>
 <script>
