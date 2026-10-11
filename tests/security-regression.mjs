@@ -332,3 +332,153 @@ test('revisão ortográfica básica mantém os rótulos e dicas corrigidos', () 
   assert.match(html, /Dica de obra/);
   assert.doesNotMatch(html, /Armazene o piso direito/);
 });
+
+
+test('fórmulas geométricas: área, perímetro, triângulo, círculo e ambiente', () => {
+  const modules = vm.runInNewContext(moduleSource + '; modules', {
+    fmt: value => String(value),
+    ceilSafe: x => Math.ceil(Math.round(x * 1e9) / 1e9),
+    Math, Number
+  });
+  const byId = id => modules.find(module => module.id === id);
+
+  const area = byId('area');
+  assert.equal(area.calc({shape:'rect',a:5,b:3}).main, 15);
+  assert.equal(area.calc({shape:'rect',a:5,b:3}).rows.find(row => row[0] === 'Perímetro')[1], 16);
+  assert.ok(Math.abs(area.calc({shape:'circ',a:5}).main - Math.PI * 25) < 1e-12);
+  assert.equal(area.calc({shape:'tri',a:4,b:3,c:4,d:4}).main, 6);
+  assert.equal(area.calc({shape:'tri',a:4,b:3,c:4,d:4}).rows[0][1], 12);
+  assert.throws(() => area.calc({shape:'tri',a:10,b:3,c:2,d:2}), /não formam um triângulo/);
+
+  const volume = byId('volume').calc({l:5,w:4,h:2.8});
+  assert.equal(volume.main, 56);
+  assert.equal(volume.rows.find(row => row[0] === 'Área do piso')[1], 20);
+  assert.equal(volume.rows.find(row => row[0] === 'Área total das paredes')[1], 50.4);
+  assert.equal(volume.rows.find(row => row[0] === 'Capacidade equivalente')[1], 56000);
+});
+
+test('volume de concreto: laje, viga, pilar, perdas e rótulos do elemento', () => {
+  const modules = vm.runInNewContext(moduleSource + '; modules', {
+    fmt: value => String(value),
+    ceilSafe: x => Math.ceil(Math.round(x * 1e9) / 1e9),
+    Math, Number
+  });
+  const concrete = modules.find(module => module.id === 'concrete');
+  const slab = concrete.calc({shape:'slab',l:6,w:4,h:0.12,q:1,waste:5});
+  assert.ok(Math.abs(slab.main - 3.024) < 1e-12);
+  assert.equal(slab.rows.find(row => row[0] === 'Volume geométrico')[1], 2.88);
+  assert.equal(slab.rows.find(row => row[0] === 'Volume total em litros')[1], 3024);
+  assert.equal(slab.rows.find(row => row[0] === 'Elemento')[1], 'Laje');
+
+  const beam = concrete.calc({shape:'beam',l:5,w:0.2,h:0.4,q:3,waste:0});
+  assert.ok(Math.abs(beam.main - 1.2) < 1e-12);
+  assert.equal(beam.rows.find(row => row[0] === 'Elemento')[1], 'Viga');
+  const column = concrete.calc({shape:'column',l:0.3,w:0.4,h:3,q:4,waste:0});
+  assert.ok(Math.abs(column.main - 1.44) < 1e-12);
+  assert.equal(column.rows.find(row => row[0] === 'Elemento')[1], 'Pilar');
+
+  assert.match(concrete.formulaFor({shape:'slab'}), /espessura/);
+  assert.match(concrete.formulaFor({shape:'beam'}), /comprimento da viga/);
+  assert.match(concrete.formulaFor({shape:'column'}), /seção.*pilar/);
+
+  const labelsSource = extractFunction(html, 'function concreteFieldLabel(shape,id){', 'function moduleFieldLabel(');
+  const concreteFieldLabel = vm.runInNewContext(labelsSource + '; concreteFieldLabel', {});
+  assert.equal(concreteFieldLabel('slab','h'), 'Espessura da laje');
+  assert.equal(concreteFieldLabel('beam','h'), 'Altura da viga');
+  assert.equal(concreteFieldLabel('column','l'), 'Largura da seção do pilar');
+  assert.equal(concreteFieldLabel('column','w'), 'Profundidade da seção do pilar');
+  assert.equal(concreteFieldLabel('custom','h'), 'Altura');
+});
+
+test('estimativas de blocos, piso, tinta, argamassa e telhado', () => {
+  const modules = vm.runInNewContext(moduleSource + '; modules', {
+    fmt: value => String(value),
+    ceilSafe: x => Math.ceil(Math.round(x * 1e9) / 1e9),
+    Math, Number
+  });
+  const byId = id => modules.find(module => module.id === id);
+
+  const masonry = byId('masonry');
+  const wall = masonry.calc({l:6,h:2.8,op:2.1,bl:39,bh:19,joint:1,waste:10});
+  assert.equal(wall.main, 203);
+  assert.ok(Math.abs(wall.rows.find(row => row[0] === 'Área líquida')[1] - 14.7) < 1e-12);
+  assert.throws(() => masonry.calc({l:6,h:2.8,op:16.8,bl:39,bh:19,joint:1,waste:10}), /aberturas/);
+
+  const floor = byId('floor');
+  assert.equal(floor.calc({l:5,w:3.5,op:0,box:2.2,waste:10}).main, 9);
+  assert.equal(floor.calc({l:5,w:5,op:0,box:2.5,waste:10}).main, 11);
+  assert.throws(() => floor.calc({l:5,w:5,op:25,box:2.5,waste:10}), /descontar/);
+
+  const paint = byId('paint').calc({p:18,h:2.8,op:3,coats:2,yield:10,can:3.6});
+  assert.ok(Math.abs(paint.main - 9.48) < 1e-12);
+  assert.equal(paint.rows.find(row => row[0] === 'Latas estimadas')[1], 3);
+
+  const mortar = byId('mortar').calc({a:45,t:15,waste:10});
+  assert.ok(Math.abs(mortar.main - 0.7425) < 1e-12);
+  assert.ok(Math.abs(mortar.rows.find(row => row[0] === 'Equivalente aproximado')[1] - 742.5) < 1e-12);
+
+  const roof = byId('roof').calc({l:8,run:4,rise:1.2,sides:2,rate:10,waste:10});
+  assert.equal(roof.main, 735);
+  assert.ok(Math.abs(roof.rows.find(row => row[0] === 'Área inclinada total')[1] - 8 * Math.hypot(4,1.2) * 2) < 1e-12);
+});
+
+test('rampa e escala: fórmulas e conversões geométricas', () => {
+  const modules = vm.runInNewContext(moduleSource + '; modules', {
+    fmt: value => String(value),
+    ceilSafe: x => Math.ceil(Math.round(x * 1e9) / 1e9),
+    Math, Number
+  });
+  const ramp = modules.find(module => module.id === 'ramp').calc({rise:0.6,run:8});
+  assert.equal(ramp.main, 7.5);
+  assert.ok(Math.abs(ramp.rows.find(row => row[0] === 'Ângulo')[1] - Math.atan(0.6/8)*180/Math.PI) < 1e-12);
+  assert.ok(Math.abs(ramp.rows.find(row => row[0] === 'Comprimento inclinado')[1] - Math.hypot(0.6,8)) < 1e-12);
+
+  const scale = modules.find(module => module.id === 'scale').calc({n:4,scale:50});
+  assert.equal(scale.main, 2);
+  assert.equal(scale.rows.find(row => row[0] === 'Medida real')[1], 200);
+  assert.equal(scale.rows.find(row => row[0] === 'Medida real')[2], 'mm'); // terceira linha: conversão mm
+});
+
+test('orçamento preliminar: contingência incide só sobre materiais e soma mão de obra', () => {
+  const budgetSource = extractFunction(html, 'function budgetTotal(){', 'function budgetPage(){');
+  const state = {
+    budgetRows: [
+      {name:'Blocos',qty:2,price:10},
+      {name:'Argamassa',qty:3,price:4}
+    ],
+    cont:10,
+    labor:40
+  };
+  const budgetTotal = vm.runInNewContext(budgetSource + '; budgetTotal', {state, Number});
+  assert.ok(Math.abs(budgetTotal() - 75.2) < 1e-12);
+});
+
+test('conversores: comprimento, área, volume, massa, inclinação e escala', () => {
+  const converterCode = html.slice(html.indexOf('function converterNumber('), html.indexOf('function sciPage()')) + '; renderConverters';
+  const elements = {
+    lenVal:{value:'250',valueAsNumber:250}, lenUnit:{value:'cm'},
+    areaVal:{value:'12.5',valueAsNumber:12.5},
+    volVal:{value:'1.2',valueAsNumber:1.2},
+    massVal:{value:'1250',valueAsNumber:1250},
+    sRise:{value:'0.5',valueAsNumber:0.5}, sRun:{value:'5',valueAsNumber:5},
+    scaleVal:{value:'3.2',valueAsNumber:3.2}, scaleDen:{value:'50'}
+  };
+  for (const id of ['lenOut','areaOut','volOut','massOut','slopeOut','scaleOut']) elements[id]={innerHTML:''};
+  const render = vm.runInNewContext(converterCode, {
+    $: selector => elements[selector.slice(1)],
+    esc: value => String(value).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])),
+    fmt: value => { if (!Number.isFinite(value)) throw new Error('Resultado inválido'); return String(Number(value.toFixed(5))); },
+    Number, Math, Error
+  });
+  render();
+  assert.match(elements.lenOut.innerHTML, /2500 mm/);
+  assert.match(elements.lenOut.innerHTML, /2.5 m/);
+  assert.match(elements.areaOut.innerHTML, /125000 cm²/);
+  assert.match(elements.areaOut.innerHTML, /0.00125 ha/);
+  assert.match(elements.volOut.innerHTML, /1200 L/);
+  assert.match(elements.volOut.innerHTML, /1200000 cm³/);
+  assert.match(elements.massOut.innerHTML, /1250000 g/);
+  assert.match(elements.massOut.innerHTML, /1.25 t/);
+  assert.match(elements.slopeOut.innerHTML, /10 %/);
+  assert.match(elements.scaleOut.innerHTML, /1.6/);
+});
