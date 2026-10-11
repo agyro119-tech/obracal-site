@@ -22,6 +22,14 @@ button:disabled{opacity:.55;cursor:not-allowed}
 /* Ajustes de legibilidade dos cards e do topo em telas pequenas */
 .mod-name{display:block}
 .mod-desc{display:block}
+/* Fundo mobile claro sem transparências que podem ser escurecidas pelo navegador */
+@media(max-width:760px){
+  body.light-theme{
+    background:linear-gradient(135deg,#f7fbf5 0%,#f2f9ed 52%,#e8f6dc 100%) !important;
+    background-color:#f7fbf5 !important;
+    background-attachment:scroll;
+  }
+}
 @media(max-width:760px){
   .topbar{gap:10px;padding:0 12px}
   .crumb{display:none}
