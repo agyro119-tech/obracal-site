@@ -99,3 +99,65 @@ test('recursos de qualidade de vida estão presentes', () => {
   assert.match(html, /ev\.key==='Escape'/);
   assert.match(html, /ev\.key==='\/'/);
 });
+
+const moduleSource = html.slice(html.indexOf('const modules=['), html.indexOf('const navItems='));
+test('todas as calculadoras retornam resultados finitos com valores padrão', () => {
+  assert.ok(moduleSource.startsWith('const modules=['), 'Definições de módulos não encontradas');
+  const modules = vm.runInNewContext(moduleSource + '; modules', {
+    fmt: (value) => {
+      if (typeof value === 'number' && !Number.isFinite(value)) throw new Error('Resultado não finito');
+      return String(value);
+    }
+  });
+  assert.ok(modules.length >= 10, 'Esperadas calculadoras de edificações');
+  for (const module of modules) {
+    const values = Object.fromEntries(module.fields.map(field => [field.id, field.v ?? (field.kind === 'select' ? field.options[0][0] : 1)]));
+    const result = module.calc(values);
+    assert.ok(result && result.main !== undefined, module.name + ': resultado principal ausente');
+    if (typeof result.main === 'number') assert.ok(Number.isFinite(result.main), module.name + ': resultado não finito');
+    assert.ok(result.unit, module.name + ': unidade ausente');
+  }
+});
+
+test('conversores rejeitam negativos, campos vazios e valores fora do limite', () => {
+  const start = html.indexOf('function converterNumber(');
+  const end = html.indexOf('function sciPage()', start);
+  assert.ok(start >= 0 && end > start, 'Funções de conversão não encontradas');
+  const converterCode = html.slice(start, end) + '; renderConverters';
+  const elements = {
+    lenVal: {value:'250', valueAsNumber:250}, lenUnit:{value:'cm'},
+    areaVal:{value:'12.5',valueAsNumber:12.5}, volVal:{value:'1.2',valueAsNumber:1.2},
+    massVal:{value:'1250',valueAsNumber:1250}, sRise:{value:'0.5',valueAsNumber:0.5},
+    sRun:{value:'5',valueAsNumber:5}, scaleVal:{value:'3.2',valueAsNumber:3.2},
+    scaleDen:{value:'50',valueAsNumber:50}
+  };
+  for (const id of ['lenOut','areaOut','volOut','massOut','slopeOut','scaleOut']) elements[id]={innerHTML:''};
+  const render = vm.runInNewContext(converterCode, {
+    $: (selector) => elements[selector.slice(1)],
+    esc: (value) => String(value).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])),
+    fmt: (value) => { if (!Number.isFinite(value)) throw new Error('Resultado inválido'); return String(Number(value.toFixed(5))); },
+    Number, Math, Error
+  });
+  render();
+  assert.match(elements.areaOut.innerHTML, /12\.5/);
+  elements.areaVal.value='-2'; elements.areaVal.valueAsNumber=-2;
+  render();
+  assert.match(elements.areaOut.innerHTML, /não pode ser menor que 0/);
+  assert.doesNotMatch(elements.areaOut.innerHTML, /NaN|Infinity/);
+  elements.areaVal.value=''; elements.areaVal.valueAsNumber=NaN;
+  render();
+  assert.match(elements.areaOut.innerHTML, /valor numérico válido/);
+  elements.areaVal.value='12.5'; elements.areaVal.valueAsNumber=12.5;
+  elements.sRun.value='0'; elements.sRun.valueAsNumber=0;
+  render();
+  assert.match(elements.slopeOut.innerHTML, /deve ser maior que 0/);
+  assert.doesNotMatch(elements.slopeOut.innerHTML, /NaN|Infinity/);
+});
+
+test('os campos dos conversores têm limites coerentes', () => {
+  for (const id of ['lenVal','areaVal','volVal','massVal','sRise','scaleVal']) {
+    const re = new RegExp('<input id="' + id + '"[^>]*min="0"');
+    assert.match(html, re, id + ' deve impedir valores negativos pela interface');
+  }
+  assert.match(html, /id="sRun"[^>]*min="0\.0001"/);
+});
