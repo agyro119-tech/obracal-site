@@ -18,6 +18,22 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .skip-link:focus{transform:translateY(0)}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 @media(max-width:1100px){.modules{grid-template-columns:repeat(2,minmax(0,1fr))}.stats{grid-template-columns:repeat(2,1fr)}.converter-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:760px){.app{display:block;padding-bottom:69px}.sidebar{display:none}.topbar{height:53px;padding:0 16px}.mobile-brand{display:flex;align-items:center;gap:8px;font-weight:800}.mobile-brand .brand-mark{width:30px;height:30px;font-size:16px;border-radius:8px}.top-right{gap:8px}.top-right .hide-mobile{display:none}.work{padding:20px 15px 28px}.hero{align-items:stretch;flex-direction:column}.hero .search{width:100%}.disclaimer{font-size:10px}.stats{gap:9px}.stat{padding:12px}.stat-value{font-size:22px}.modules{grid-template-columns:1fr}.mod-card{min-height:92px;padding:13px}.calc-layout{grid-template-columns:1fr}.result-panel{position:static}.form-grid{gap:13px}.panel{padding:15px}.converter-grid{grid-template-columns:1fr}.section-head{margin-top:22px}.bottom-nav{display:grid!important}.bottom-nav button{font-size:9px}.budget-input{width:94px}}.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:8;grid-template-columns:repeat(5,1fr);padding:6px 4px max(6px,env(safe-area-inset-bottom));background:#191c20f5;backdrop-filter:blur(14px);border-top:1px solid var(--line)}.bottom-nav button{display:flex;flex-direction:column;align-items:center;gap:3px;color:#8e99a4;border:0;background:none;padding:5px}.bottom-nav button.active{color:var(--orange2)}.bottom-nav .ni{font-size:18px}
+
+/* Ajustes de legibilidade dos cards e do topo em telas pequenas */
+.mod-name{display:block}
+.mod-desc{display:block}
+@media(max-width:760px){
+  .topbar{gap:10px;padding:0 12px}
+  .crumb{display:none}
+  .mobile-brand{flex-shrink:0;white-space:nowrap}
+  .top-right{gap:6px;min-width:0;white-space:nowrap}
+  .top-right .pill{padding:4px 6px;font-size:10px}
+  .mod-card{gap:12px;padding:15px}
+  .mod-card-main{gap:14px}
+  .mod-name{margin:0 0 6px;line-height:1.3}
+  .mod-desc{line-height:1.55}
+  .tag{margin-top:8px}
+}
 </style></head>
 <body><a class="skip-link" href="#main-content">Pular para o conteúdo</a><div class="app"><aside class="sidebar"><div class="brand"><div class="brand-mark">⌂</div><div><h1>ObraCalc</h1><small>Engenharia do conhecimento</small></div></div><div class="nav-label">Workspace</div><nav class="nav" id="sideNav"></nav><div class="side-foot"><span class="dot"></span> MODO LOCAL · OFFLINE<br>UNIDADES SI · BRL<br><br>v1.0 · ESTUDO TÉCNICO</div></aside><div class="main"><header class="topbar"><div class="mobile-brand"><span class="brand-mark">⌂</span> ObraCalc</div><div class="crumb" id="crumb">PAINEL / INÍCIO</div><div class="top-right"><span class="pill">SI · m / m² / m³</span><span class="pill hide-mobile">pt-BR · R$</span><span>● LOCAL</span></div></header><main class="work" id="main-content"><div class="disclaimer">⚠ <span><b>Ferramenta educacional para estimativas.</b> Confira projetos, normas técnicas aplicáveis, fichas dos fabricantes e orientação de profissional habilitado. Não dimensiona estruturas nem substitui projeto ou responsabilidade técnica.</span></div><div id="view"></div></main></div></div><nav class="bottom-nav" id="bottomNav"></nav><div class="toast" id="toast" role="status"></div>
 <script>
