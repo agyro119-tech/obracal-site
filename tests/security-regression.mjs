@@ -69,14 +69,14 @@ test('valores dinâmicos dos resultados são escapados antes de inserir HTML', (
   assert.match(html, /esc\(n\)/);
 });
 
-const scriptMatch = html.match(/<script>([\\s\\S]*?)<\\/script>/i);
+const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/i);
 test('JavaScript completo compila sem erro de sintaxe', () => {
   assert.ok(scriptMatch, 'Script principal não encontrado');
   assert.doesNotThrow(() => new vm.Script(scriptMatch[1]));
 });
 
 test('dicas de obra são curtas, variadas e mantêm o layout compacto', () => {
-  const match = html.match(/const safetyTips=(\\[[\\s\\S]*?\\]);\\s*function dailyTipIndex/);
+  const match = html.match(/const safetyTips=(\[[\s\S]*?\]);\s*function dailyTipIndex/);
   assert.ok(match, 'Lista de dicas não encontrada');
   const tips = JSON.parse(match[1]);
   assert.ok(tips.length >= 30, 'Esperadas pelo menos 30 dicas');
