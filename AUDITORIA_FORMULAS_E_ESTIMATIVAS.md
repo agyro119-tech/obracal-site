@@ -59,5 +59,5 @@ O símbolo % continua representando o valor percentual literal convertido em dec
 ## Testes e alterações
 
 - Foram adicionados testes de regressão para as fórmulas dos dez módulos, arredondamentos, estimativas de materiais, conversores, orçamento e rótulos/dimensões de cada elemento de concreto.
-- Foram executadas **36 verificações independentes** contra o código atual; não houve divergências nos casos conferidos. Também foi verificada a sintaxe do JavaScript principal e do arquivo de testes.
+- Foram executadas **50 verificações independentes** contra o código atual; não houve divergências nos casos conferidos. Também foi verificada a sintaxe do JavaScript principal e do arquivo de testes.
 - A validação aqui é matemática e de comportamento para os casos de teste. Antes de usar quantidades em uma obra real, confira medidas no local, fichas técnicas dos produtos, especificações do projeto e orientação de profissional habilitado.
