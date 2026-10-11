@@ -68,3 +68,34 @@ test('valores dinâmicos dos resultados são escapados antes de inserir HTML', (
   assert.match(html, /esc\(a\[2\]\|\|''\)/);
   assert.match(html, /esc\(n\)/);
 });
+
+const scriptMatch = html.match(/<script>([\\s\\S]*?)<\\/script>/i);
+test('JavaScript completo compila sem erro de sintaxe', () => {
+  assert.ok(scriptMatch, 'Script principal não encontrado');
+  assert.doesNotThrow(() => new vm.Script(scriptMatch[1]));
+});
+
+test('dicas de obra são curtas, variadas e mantêm o layout compacto', () => {
+  const match = html.match(/const safetyTips=(\\[[\\s\\S]*?\\]);\\s*function dailyTipIndex/);
+  assert.ok(match, 'Lista de dicas não encontrada');
+  const tips = JSON.parse(match[1]);
+  assert.ok(tips.length >= 30, 'Esperadas pelo menos 30 dicas');
+  for (const tip of tips) {
+    assert.ok(tip.title.length <= 45, `Título muito longo: ${tip.title}`);
+    assert.ok(tip.text.length <= 150, `Dica muito longa: ${tip.text}`);
+  }
+  assert.match(html, /id="nextTip"/);
+  assert.match(html, /state\.tipIndex=\(state\.tipIndex\+1\)%safetyTips\.length/);
+});
+
+test('recursos de qualidade de vida estão presentes', () => {
+  assert.match(html, /data-favorite/);
+  assert.match(html, /obc-favorites/);
+  assert.match(html, /function favoritesHTML/);
+  assert.match(html, /function recentHTML/);
+  assert.match(html, /obc-recent/);
+  assert.match(html, /obc-form-/);
+  assert.match(html, /ev\.key==='Enter'/);
+  assert.match(html, /ev\.key==='Escape'/);
+  assert.match(html, /ev\.key==='\/'/);
+});
