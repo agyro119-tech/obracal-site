@@ -90,6 +90,14 @@ test('tema mobile inicia claro, respeita preferência, evita escurecimento forç
   assert.doesNotMatch(html, /theme-toggle-mobile/);
 });
 
+test('fundo claro mobile usa degradê opaco e uniforme', () => {
+  assert.ok(html.includes('body.light-theme{'));
+  assert.ok(html.includes('@media(max-width:760px){\n  body.light-theme{'));
+  assert.ok(html.includes('background:linear-gradient(135deg,#f7fbf5 0%,#f2f9ed 52%,#e8f6dc 100%) !important;'));
+  assert.ok(html.includes('background-color:#f7fbf5 !important;'));
+  assert.ok(html.includes('background-attachment:scroll;'));
+});
+
 test('dicas de obra são curtas, variadas e mantêm o layout compacto', () => {
   const match = html.match(/const safetyTips=(\[[\s\S]*?\]);\s*function dailyTipIndex/);
   assert.ok(match, 'Lista de dicas não encontrada');
