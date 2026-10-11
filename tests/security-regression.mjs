@@ -388,6 +388,14 @@ test('volume de concreto: laje, viga, pilar, perdas e rótulos do elemento', () 
   assert.equal(concreteFieldLabel('column','l'), 'Largura da seção do pilar');
   assert.equal(concreteFieldLabel('column','w'), 'Profundidade da seção do pilar');
   assert.equal(concreteFieldLabel('custom','h'), 'Altura');
+  const defaultsSource = extractFunction(html, 'function concreteDimensionDefaults(shape){', 'function moduleFieldLabel(');
+  const concreteDimensionDefaults = vm.runInNewContext(defaultsSource + '; concreteDimensionDefaults', {});
+  assert.equal(concreteDimensionDefaults('slab').h, 0.12);
+  assert.equal(concreteDimensionDefaults('beam').w, 0.25);
+  assert.equal(concreteDimensionDefaults('beam').h, 0.5);
+  assert.equal(concreteDimensionDefaults('column').l, 0.3);
+  assert.equal(concreteDimensionDefaults('column').h, 3);
+  assert.equal(concreteDimensionDefaults('custom').l, 1);
 });
 
 test('estimativas de blocos, piso, tinta, argamassa e telhado', () => {
