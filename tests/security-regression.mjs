@@ -129,7 +129,7 @@ test('conversores rejeitam negativos, campos vazios e valores fora do limite', (
     areaVal:{value:'12.5',valueAsNumber:12.5}, volVal:{value:'1.2',valueAsNumber:1.2},
     massVal:{value:'1250',valueAsNumber:1250}, sRise:{value:'0.5',valueAsNumber:0.5},
     sRun:{value:'5',valueAsNumber:5}, scaleVal:{value:'3.2',valueAsNumber:3.2},
-    scaleDen:{value:'50',valueAsNumber:50}
+    scaleDen:{value:'50'}
   };
   for (const id of ['lenOut','areaOut','volOut','massOut','slopeOut','scaleOut']) elements[id]={innerHTML:''};
   const render = vm.runInNewContext(converterCode, {
@@ -140,6 +140,7 @@ test('conversores rejeitam negativos, campos vazios e valores fora do limite', (
   });
   render();
   assert.match(elements.areaOut.innerHTML, /12\.5/);
+  assert.match(elements.scaleOut.innerHTML, /1:50/);
   elements.areaVal.value='-2'; elements.areaVal.valueAsNumber=-2;
   render();
   assert.match(elements.areaOut.innerHTML, /não pode ser menor que 0/);
@@ -160,4 +161,11 @@ test('os campos dos conversores têm limites coerentes', () => {
     assert.match(html, re, id + ' deve impedir valores negativos pela interface');
   }
   assert.match(html, /id="sRun"[^>]*min="0\.0001"/);
+});
+
+test('revisão ortográfica básica mantém os rótulos e dicas corrigidos', () => {
+  assert.match(html, /Armazene o piso corretamente/);
+  assert.match(html, /Conversores de unidades/);
+  assert.match(html, /Dica de obra/);
+  assert.doesNotMatch(html, /Armazene o piso direito/);
 });
