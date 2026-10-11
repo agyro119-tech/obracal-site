@@ -263,7 +263,8 @@ test('todas as calculadoras retornam resultados finitos com valores padrão', ()
     fmt: (value) => {
       if (typeof value === 'number' && !Number.isFinite(value)) throw new Error('Resultado não finito');
       return String(value);
-    }
+    },
+    ceilSafe: x => Math.ceil(Math.round(x * 1e9) / 1e9)
   });
   assert.ok(modules.length >= 10, 'Esperadas calculadoras de edificações');
   for (const module of modules) {
