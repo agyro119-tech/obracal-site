@@ -15,6 +15,108 @@ function extractFunction(source, startMarker, endMarker) {
 
 const parserSource = extractFunction(html, 'function evalExpr(s){', 'function guide(){');
 const evalExpr = vm.runInNewContext(`${parserSource}; evalExpr`, {});
+const safeNum = v => {
+  if (String(v ?? '').trim() === '') return NaN;
+  const n = Number(String(v).replace(',', '.'));
+  return Number.isFinite(n) ? n : NaN;
+};
+
+test('M1: sinal negativo precisa ter precedência inferior à potência', () => {
+  const cases = [
+    ['-2^2', -4],
+    ['(-2)^2', 4],
+    ['-2^-2', -0.25],
+    ['-(2+1)^2', -9],
+    ['-3^2+10', 1],
+    ['2^-2', 0.25],
+    ['2^3^2', 512],
+    ['2*-3', -6],
+    ['--2', 2],
+    ['-(2+3)', -5]
+  ];
+  for (const [expression, expected] of cases) {
+    assert.equal(evalExpr(expression), expected, expression);
+  }
+});
+
+function createWireSciHarness(initial = {}, keyNames = []) {
+  const values = {
+    rA: '', rB: '', rC: '', rType: 'direct',
+    pBase: '', pRate: '',
+    rOut: '—', rStatus: 'mesma unidade de B', rFormula: 'X = (B × C) ÷ A',
+    pOut: '—', pStatus: 'unidades',
+    sciDisplay: '0',
+    ...initial
+  };
+  const elements = Object.fromEntries(Object.entries(values).map(([id, value]) => [
+    id, { value: String(value), textContent: String(value), addEventListener(type, callback) { handlers[id] = callback; } }
+  ]));
+  const handlers = {};
+  const keys = keyNames.map(key => ({
+    dataset: { key }, onclick: null
+  }));
+  const document = { querySelectorAll(selector) { return selector === '[data-key]' ? keys : []; } };
+  const $ = selector => elements[selector.replace(/^#/, '')];
+  const state = { expression: '', sciAns: null };
+  const wireSciSource = extractFunction(html, 'function wireSci(){', "document.addEventListener('keydown'");
+  const wireSci = vm.runInNewContext(`${wireSciSource}; wireSci`, {
+    $, document, state, safeNum,
+    fmt: (n) => Number.isFinite(n) ? String(n) : '—',
+    toast: () => {},
+    evalExpr
+  });
+  wireSci();
+  return { elements, handlers, keys, state };
+}
+
+test('M2: regra de três rejeita campos vazios e divisões inválidas com mensagens', () => {
+  const ui = createWireSciHarness();
+  assert.equal(ui.elements.rStatus.textContent, 'Preencha A, B e C.');
+  assert.equal(ui.elements.pStatus.textContent, 'Preencha o valor base e o percentual.');
+
+  ui.elements.rA.value = '0';
+  ui.elements.rB.value = '12';
+  ui.elements.rC.value = '7';
+  ui.handlers.rA();
+  assert.equal(ui.elements.rStatus.textContent, 'Na proporção direta, A não pode ser zero.');
+
+  ui.elements.rType.value = 'inverse';
+  ui.handlers.rType();
+  assert.equal(ui.elements.rStatus.textContent, 'Na proporção inversa, A não pode ser zero.');
+
+  ui.elements.rA.value = '4';
+  ui.elements.rC.value = '0';
+  ui.handlers.rA();
+  assert.equal(ui.elements.rStatus.textContent, 'Na proporção inversa, C não pode ser zero.');
+
+  ui.elements.rA.value = '4';
+  ui.elements.rB.value = '12';
+  ui.elements.rC.value = '7';
+  ui.handlers.rA();
+  assert.equal(Number(ui.elements.rOut.textContent), 48 / 7);
+  assert.equal(ui.elements.rStatus.textContent, 'mesma unidade de B');
+
+  ui.elements.rType.value = 'direct';
+  ui.handlers.rType();
+  assert.equal(Number(ui.elements.rOut.textContent), 21);
+
+  ui.elements.pBase.value = '250';
+  ui.elements.pRate.value = '12';
+  ui.handlers.pBase();
+  assert.equal(Number(ui.elements.pOut.textContent), 30);
+  assert.equal(ui.elements.pStatus.textContent, 'unidades');
+});
+
+test('M1: resultado negativo entre parênteses ao continuar a conta', () => {
+  const ui = createWireSciHarness({ rA: '4', rB: '12', rC: '7', pBase: '250', pRate: '12' }, ['=', '^', '2']);
+  ui.state.expression = '-2^2';
+  ui.keys.find(k => k.dataset.key === '=').onclick();
+  assert.equal(ui.state.expression, '(-4)');
+  ui.keys.find(k => k.dataset.key === '^').onclick();
+  ui.keys.find(k => k.dataset.key === '2').onclick();
+  ui.keys.find(k => k.dataset.key === '=').onclick();
+  assert.equal(ui.state.expression, '16');
+});
 
 test('calculadora científica: expressões básicas e precedência', () => {
   assert.equal(evalExpr('2+2'), 4);
@@ -124,6 +226,37 @@ test('recursos de qualidade de vida estão presentes', () => {
 });
 
 const moduleSource = html.slice(html.indexOf('const modules=['), html.indexOf('const navItems='));
+
+test('M6: arredondamento de blocos, caixas, latas e telhas não adiciona unidades por ruído numérico', () => {
+  const ceilSafe = x => Math.ceil(Math.round(x * 1e9) / 1e9);
+  const modules = vm.runInNewContext(moduleSource + '; modules', {
+    fmt: value => String(value),
+    ceilSafe,
+    Math,
+    Number
+  });
+  const byId = id => modules.find(module => module.id === id);
+
+  const floor = byId('floor');
+  assert.equal(floor.calc({l:5,w:3.5,op:0,box:2.2,waste:10}).main, 9);
+  assert.equal(floor.calc({l:5,w:5,op:0,box:2.5,waste:10}).main, 11);
+
+  const masonry = byId('masonry');
+  assert.equal(masonry.calc({l:6,h:2.8,op:2.1,bl:39,bh:19,joint:1,waste:10}).main, 203);
+
+  const paint = byId('paint');
+  const paintResult = paint.calc({p:18,h:2.8,op:3,coats:2,yield:10,can:3.6});
+  assert.equal(paintResult.main, 9.48);
+  assert.equal(paintResult.rows.find(row => row[0] === 'Latas estimadas')[1], 3);
+
+  const roof = byId('roof');
+  assert.equal(roof.calc({l:8,run:4,rise:1.2,sides:2,rate:10,waste:10}).main, 735);
+
+  assert.match(html, /const ceilSafe=x=>Math\.ceil\(Math\.round\(x\*1e9\)\/1e9\)/);
+  assert.equal((html.match(/ceilSafe\(/g) || []).length, 4);
+});
+
+
 test('todas as calculadoras retornam resultados finitos com valores padrão', () => {
   assert.ok(moduleSource.startsWith('const modules=['), 'Definições de módulos não encontradas');
   const modules = vm.runInNewContext(moduleSource + '; modules', {
