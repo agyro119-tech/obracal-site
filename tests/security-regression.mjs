@@ -13,7 +13,7 @@ function extractFunction(source, startMarker, endMarker) {
   return source.slice(start, end).trim();
 }
 
-const parserSource = extractFunction(html, 'function evalExpr(s){', '\\nfunction guide(){');
+const parserSource = extractFunction(html, 'function evalExpr(s){', 'function guide(){');
 const evalExpr = vm.runInNewContext(`${parserSource}; evalExpr`, {});
 
 test('calculadora científica: expressões básicas e precedência', () => {
@@ -47,10 +47,10 @@ test('calculadora científica: nunca devolve NaN ou infinito', () => {
 test('HTML tem políticas de segurança e não carrega scripts externos', () => {
   assert.match(html, /http-equiv="Content-Security-Policy"/i);
   assert.match(html, /name="referrer" content="strict-origin-when-cross-origin"/i);
-  assert.doesNotMatch(html, /<script\\b[^>]*\\bsrc\\s*=/i);
-  assert.doesNotMatch(html, /\\beval\\s*\\(/);
-  assert.doesNotMatch(html, /new\\s+Function\\s*\\(/);
-  assert.doesNotMatch(html, /javascript\\s*:/i);
+  assert.doesNotMatch(html, /<script\b[^>]*\bsrc\s*=/i);
+  assert.doesNotMatch(html, /\beval\s*\(/);
+  assert.doesNotMatch(html, /new\s+Function\s*\(/);
+  assert.doesNotMatch(html, /javascript\s*:/i);
 });
 
 test('dados locais têm limite de tamanho e o histórico é validado', () => {
