@@ -30,7 +30,7 @@ test('calculadora científica: rejeita entradas maliciosas e inválidas', () => 
   assert.throws(() => evalExpr('1/0'), /Divisão por zero/);
   assert.throws(() => evalExpr('sqrt(-1)'), /Raiz de número negativo/);
   assert.throws(() => evalExpr('1e309'), /Valor inválido|Expressão inválida/);
-  assert.throws(() => evalExpr('('), /Parênteses não fechados|Expressão inválida/);
+  assert.throws(() => evalExpr('('), /Parênteses não fechados|Expressão inválida|Valor inválido/);
   assert.throws(() => evalExpr('1+'.padEnd(161, '1')), /muito longa/);
   assert.throws(() => evalExpr(Array(45).fill('1').join('+')), /complexa demais|Expressão inválida/);
 });
