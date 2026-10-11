@@ -436,7 +436,8 @@ test('rampa e escala: fórmulas e conversões geométricas', () => {
   const scale = modules.find(module => module.id === 'scale').calc({n:4,scale:50});
   assert.equal(scale.main, 2);
   assert.equal(scale.rows.find(row => row[0] === 'Medida real')[1], 200);
-  assert.equal(scale.rows.find(row => row[0] === 'Medida real')[2], 'mm'); // terceira linha: conversão mm
+  assert.equal(scale.rows[2][1], 2000); // centímetros reais convertidos em milímetros
+  assert.equal(scale.rows[2][2], 'mm');
 });
 
 test('orçamento preliminar: contingência incide só sobre materiais e soma mão de obra', () => {
