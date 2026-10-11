@@ -75,6 +75,17 @@ test('JavaScript completo compila sem erro de sintaxe', () => {
   assert.doesNotThrow(() => new vm.Script(scriptMatch[1]));
 });
 
+test('tema mobile inicia claro sem preferência manual e respeita escolha do usuário', () => {
+  assert.match(html, /const storedTheme=storage\\.get\\('obc-theme',null\\)/);
+  assert.match(html, /const explicitTheme=storage\\.get\\('obc-theme-choice',false\\)===true/);
+  assert.match(html, /const isMobileViewport=window\\.matchMedia\\?window\\.matchMedia\\('\(max-width: 760px\)'\\)\\.matches:window\\.innerWidth<=760/);
+  assert.match(html, /const initialTheme=explicitTheme\\?\\(storedTheme==='light'\\?'light':'dark'\\):\\(isMobileViewport\\?'light':\\(storedTheme==='light'\\?'light':'dark'\\)\\)/);
+  assert.match(html, /storage\\.set\\('obc-theme-choice',true\\)/);
+  assert.match(html, /class="theme-toggle theme-toggle-mobile"/);
+  assert.match(html, /\\.bottom-nav \\.theme-toggle-mobile\\{[^}]*position:static!important/);
+  assert.match(html, /body\\.light-theme\\{color-scheme:light\\}/);
+});
+
 test('dicas de obra são curtas, variadas e mantêm o layout compacto', () => {
   const match = html.match(/const safetyTips=(\[[\s\S]*?\]);\s*function dailyTipIndex/);
   assert.ok(match, 'Lista de dicas não encontrada');
